@@ -21,6 +21,11 @@ public class Player {
 		this.friendRequest = friendRequest;
 		this.school = school;
 	}
+	
+	public String toString()
+	{
+		return (this.name + ", " + this.grade + ", " + this.skill + ", " + this.friendRequest + ", " + this.school);
+	}
 
 //	public String getName() {
 //		return _name;

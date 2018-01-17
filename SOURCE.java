@@ -1,5 +1,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -21,7 +23,7 @@ public class SOURCE {
 		sc.nextLine();
 		sc.nextLine();
 		
-		Vector<Player> players = new Vector<Player>(); //A list of all players
+		Hashtable<String, Player> players = new Hashtable<String, Player>(); //A list of all players
 		//Used to calculate average skill of each grade
 		final int NUM_GRADES = 12; //maybe change the 12
 		int[] gradeCounts = new int[NUM_GRADES]; 
@@ -63,7 +65,7 @@ public class SOURCE {
 			
 			Player temp = new Player(name, grade, skill, friend, school);
 			
-			players.add(temp);
+			players.put(name, temp);
 			
 			gradeCounts[grade]++;
 			gradeTotals[grade] += skill;
@@ -79,31 +81,43 @@ public class SOURCE {
 		int[] gradeAvg = new int[NUM_GRADES];
 		for (int i = 0; i < NUM_GRADES; i++)
 		{
-			gradeAvg[i] = gradeTotals[i]/gradeCounts[i];
+			if (gradeCounts[i] > 0)
+			{
+				gradeAvg[i] = gradeTotals[i]/gradeCounts[i];
+			}
 		}
 		
 		
 		Vector<Team> teams = new Vector<Team>();
 		
-		//creates a team for every friend request pair
-		for (Player player : players)
+		for (Enumeration<Player> e = players.elements(); e.hasMoreElements();) //creates a team for every friend request pair and solo players
 		{
-			if (!player.friendRequest.equals(""))
+			Player player = e.nextElement();
+			
+			Player playerFriend = players.get(player.friendRequest); //finds the Player that player has requested to be on their team, or null
+			if (playerFriend != null && playerFriend.friendRequest.equals(player.name)) //returns true only if both players have requested each other
 			{
-				Player playerFriend = findPlayer(players, player.friendRequest); //finds the Player that player has requested to be on their team
-				if (playerFriend != null && playerFriend.friendRequest.equals(player.name)) //returns true only if both players have requested each other
-				{
-					//adds the pair to a team
-					Team t = new Team();
-					t.addPlayer(player);
-					t.addPlayer(playerFriend);
-					teams.add(t);
-					
-					//removes both players from the master list
-					players.remove(player);
-					players.remove(playerFriend);
-				}
+				//adds the pair to a team
+				Team t = new Team();
+				t.addPlayer(player);
+				t.addPlayer(playerFriend);
+				teams.add(t);
+				
+				//removes both players from the master list
+				players.remove(player.name);
+				players.remove(playerFriend.name);
 			}
+			else 
+			{
+				//adds the solo player to a team
+				Team t = new Team();
+				t.addPlayer(player);
+				teams.add(t);
+				
+				//removes both players from the master list
+				players.remove(player.name);
+			}
+			
 		}
 		
 		
@@ -111,21 +125,21 @@ public class SOURCE {
 	}
 	
 	
-	/**
-	 * Finds a player in the given vector with a matching name, or null if no such player is found
-	 * @param players a vector of Player objects
-	 * @param playerName the name of the desired player
-	 * @return the Player with playerName, or null if not found
-	 */
-	static Player findPlayer(Vector<Player> players, String playerName)
-	{
-		for (Player player : players) {
-			if (player.name == playerName)
-			{
-				return player;
-			}
-		}
-		return null;
-	}
+//	/**
+//	 * Finds a player in the given vector with a matching name, or null if no such player is found
+//	 * @param players a vector of Player objects
+//	 * @param playerName the name of the desired player
+//	 * @return the Player with playerName, or null if not found
+//	 */
+//	static Player findPlayer(Hashtable<String, Player> players, String playerName)
+//	{
+//		for (Player player : players) {
+//			if (player.name == playerName)
+//			{
+//				return player;
+//			}
+//		}
+//		return null;
+//	}
 
 }
