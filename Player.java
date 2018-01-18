@@ -22,6 +22,7 @@ public class Player {
 		this.school = school;
 	}
 	
+	@Override
 	public String toString()
 	{
 		return (this.name + ", " + this.grade + ", " + this.skill + ", " + this.friendRequest + ", " + this.school);

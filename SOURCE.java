@@ -6,8 +6,12 @@ import java.util.Scanner;
 import java.util.Vector;
 
 public class SOURCE {
+	
+	final static int NUM_GRADES = 12; //maybe change the 12
 
 	public static void main(String[] args) {
+		
+		//TODO: get filepath from stdin
 		String filepath = "F:\\Unsorted Downloads\\23G Registrants.csv";
 		
 		Scanner sc;
@@ -24,20 +28,13 @@ public class SOURCE {
 		sc.nextLine();
 		
 		Hashtable<String, Player> players = new Hashtable<String, Player>(); //A list of all players
+		
 		//Used to calculate average skill of each grade
-		final int NUM_GRADES = 12; //maybe change the 12
 		int[] gradeCounts = new int[NUM_GRADES]; 
 		int[] gradeTotals = new int[NUM_GRADES];
 		//Used to calculate how many players of each grad need to be on a team
 		int totalPlayers = 0;
-		int avgGrade = 0;
-		
-		//initialize the arrays. Is this neccessary?
-		for (int i = 0; i < NUM_GRADES; i++)
-		{
-			gradeCounts[i] = 0;
-			gradeTotals[i] = 0;
-		}
+		double avgGrade = 0;
 		
 		while(sc.hasNextLine())
 		{
@@ -90,7 +87,8 @@ public class SOURCE {
 		
 		Vector<Team> teams = new Vector<Team>();
 		
-		for (Enumeration<Player> e = players.elements(); e.hasMoreElements();) //creates a team for every friend request pair and solo players
+		//creates a team for every friend request pair
+		for (Enumeration<Player> e = players.elements(); e.hasMoreElements();) 
 		{
 			Player player = e.nextElement();
 			
@@ -107,39 +105,62 @@ public class SOURCE {
 				players.remove(player.name);
 				players.remove(playerFriend.name);
 			}
-			else 
+		}
+		
+		Vector<Player> playersVec = new Vector<Player>(players.values()); //creates a vector of all remaining solo players
+		
+		//makes sure each stub team has 3-5 from the already-represented school
+		for (Team team : teams) //iterates through all teams
+		{
+			//teams.remove(team); //removes the current team while this is done
+			
+			for (Enumeration<String> e = team.schools.keys(); e.hasMoreElements();) //iterates through each school on a team
 			{
-				//adds the solo player to a team
-				Team t = new Team();
-				t.addPlayer(player);
-				teams.add(t);
+				String school = e.nextElement();
 				
-				//removes both players from the master list
-				players.remove(player.name);
+				while (team.schoolNum(school) < 3)
+				{ //there are less than 3 players from a school on this team, finds more
+					Player temp = findPlayer(school, team.largestGrade(), playersVec);
+					
+					if (temp != null)
+					{
+						team.addPlayer(temp);
+						playersVec.remove(temp);
+					}
+					else
+					{
+						break;
+					}
+				}
 			}
+			
+			//teams.add(team);
+		}
+		
+		int numTeams = (totalPlayers/14) + 1; //max of 14 per team
+		
+		if (teams.size() > numTeams)
+		{
+			//merge the best teams with the worst teams
+			
 			
 		}
 		
-		
 
 	}
-	
-	
-//	/**
-//	 * Finds a player in the given vector with a matching name, or null if no such player is found
-//	 * @param players a vector of Player objects
-//	 * @param playerName the name of the desired player
-//	 * @return the Player with playerName, or null if not found
-//	 */
-//	static Player findPlayer(Hashtable<String, Player> players, String playerName)
-//	{
-//		for (Player player : players) {
-//			if (player.name == playerName)
-//			{
-//				return player;
-//			}
-//		}
-//		return null;
-//	}
+
+
+	static Player findPlayer(String school, int grade, Vector<Player> players)
+	{
+		for (Player player : players)
+		{
+			if (player.grade == grade && player.school.equals(school))
+			{
+				return player;
+			}
+		}
+		
+		return null;
+	}
 
 }
