@@ -104,13 +104,18 @@ public class Team
 	 */
 	public String largestSchool()
 	{
+		if (schools.size() == 0)
+		{
+			return "";
+		}
+
 		String school = "";
 		
 		for (Enumeration<String> e = schools.keys(); e.hasMoreElements();) //iterates through each school on a team
 		{
 			String next = e.nextElement();
 			
-			if (schools.get(next) > (Integer)schools.get(school)) //the cast is incase .get returns null
+			if (schools.get(next) > schools.getOrDefault(school, -1)) //the cast is incase .get returns null
 			{
 				school = next;
 			}
@@ -124,7 +129,7 @@ public class Team
 	/**
 	 * @return The total skill of a team. The sum of all individual player's skill
 	 */
-	public int totalSKill()
+	public int totalSkill()
 	{
 		int totalSkill = 0;
 		
@@ -136,11 +141,22 @@ public class Team
 		return totalSkill;
 	}
 	
+	/**
+	 * @return The average skill of all players on the team
+	 */
+	public double averageSkill()
+	{
+		double skill = this.totalSkill();
+		double size = this.size();
+		double avg = skill/size;
+		return avg;
+	}
+	
 	
 	@Override
 	public String toString()
-	{
-		return ("largest grade: " + largestGrade() + ", largest school: " + largestSchool() + ", # players: " + size());
+	{	
+		return ("largest grade: " + this.largestGrade() + ", largest school: " + this.largestSchool() + ", num players: " + this.size() + ", avg skill: " + this.averageSkill());
 	}
 
 }

@@ -27,11 +27,7 @@ public class Player {
 	{
 		return (this.name + ", " + this.grade + ", " + this.skill + ", " + this.friendRequest + ", " + this.school);
 	}
-	
-	public int numPlayers()
-	{
-		return players.size();
-	}
+
 
 //	public String getName() {
 //		return _name;

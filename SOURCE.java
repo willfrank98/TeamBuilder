@@ -31,11 +31,15 @@ public class SOURCE {
 		Hashtable<String, Player> players = new Hashtable<String, Player>(); //A list of all players
 		
 		//Used to calculate average skill of each grade
-		int[] gradeCounts = new int[NUM_GRADES]; 
-		int[] gradeTotals = new int[NUM_GRADES];
+		int[] gradePlayerCounts = new int[NUM_GRADES]; 
+		int[] gradeSkillTotals = new int[NUM_GRADES];
 		//Used to calculate how many players of each grad need to be on a team
 		int totalPlayers = 0;
 		double avgGrade = 0;
+		
+		//the min and max grades present
+		int minGrade = -1;
+		int maxGrade = 999;
 		
 		while(sc.hasNextLine())
 		{
@@ -46,6 +50,17 @@ public class SOURCE {
 			int grade = Integer.parseInt(line[2]);
 			int skill = Integer.parseInt(line[3]);
 			
+			if (grade > maxGrade)
+			{
+				maxGrade = grade;
+			}
+			
+			if (grade < minGrade)
+			{
+				minGrade = grade;
+			}
+			
+			//TODO: should something be done with these exceptions?
 			String friend = "";
 			try
 			{
@@ -65,8 +80,8 @@ public class SOURCE {
 			
 			players.put(name, temp);
 			
-			gradeCounts[grade]++;
-			gradeTotals[grade] += skill;
+			gradePlayerCounts[grade]++;
+			gradeSkillTotals[grade] += skill;
 			totalPlayers++;
 			avgGrade += grade;
 		}
@@ -76,15 +91,14 @@ public class SOURCE {
 		
 		//calculates the average skill level of each grade
 		//this is done to balance each team by skill per grade
-		int[] gradeAvg = new int[NUM_GRADES];
+		int[] gradeAverageSkill = new int[NUM_GRADES];
 		for (int i = 0; i < NUM_GRADES; i++)
 		{
-			if (gradeCounts[i] > 0)
+			if (gradePlayerCounts[i] > 0)
 			{
-				gradeAvg[i] = gradeTotals[i]/gradeCounts[i];
+				gradeAverageSkill[i] = gradeSkillTotals[i]/gradePlayerCounts[i];
 			}
 		}
-		
 		
 		Vector<Team> teams = new Vector<Team>();
 		
@@ -135,12 +149,11 @@ public class SOURCE {
 			}
 		}
 		
-		int numTeams = (totalPlayers/14) + 1; //max of 14 per team
-		int maxPlayers = 14;
+		int maxPlayers = 14; //max of 14 per team
+		int numTeams = (totalPlayers/maxPlayers) + 1; 
 		
-		TeamSkillComparator comp = new TeamSkillComparator();
+		TeamAverageSkillComparator comp = new TeamAverageSkillComparator();
 		//sorts the teams by total skill level, then adds the worst team to the best team
-		
 		while (teams.size() > numTeams)
 		{
 			teams.sort(comp);
@@ -148,19 +161,37 @@ public class SOURCE {
 			//if the best and worst team are too big to be added moves on to the 2nd best and 2nd worst, etc.
 			for (int i = 0; i < teams.size(); i++) 
 			{
-				if (teams.get(i).size() + teams.get(teams.size() - 1 - i).size() < 14)
+				if (teams.get(i).size() + teams.get(teams.size() - 1 - i).size() < maxPlayers)
 				{
 					teams.get(i).addPlayers(teams.get(teams.size() - 1 - i));
 					teams.remove(teams.get(teams.size() - 1 - i));
 					break;
 				}
 			}
-			
-			
-			
 		}
 		
-
+		//players are sorted by skill
+		//this may be unneccesary
+		playersVec.sort(new PlayerSkillComparator());
+		
+		while (playersVec.size() > 0)
+		{
+			//for each team
+				//add players by grade until gradePlayerCounts[grade]/maxPlayers is reached
+				//given the current avg skill of team, find a player that moves the avg towards gradeSkillTotals[grade]/gradePlayerCounts[grade]
+			
+			for (Team team : teams)
+			{
+				for (int i = minGrade; i <= maxGrade; i++)
+				{
+					if (team.numGrade[i] < /* the minimum numbers of players from each grade */ 200)
+					{
+						
+					}
+				}
+			}
+		}
+		
 	}
 
 
@@ -189,12 +220,34 @@ public class SOURCE {
 	 * A Comparator for the Team class, based on team's total skill
 	 *
 	 */
-	private static class TeamSkillComparator implements Comparator<Team>
+	private static class TeamAverageSkillComparator implements Comparator<Team>
 	{
-
 		@Override
-		public int compare(Team t1, Team t2) {
-			return t1.totalSKill() - t2.totalSKill();
+		public int compare(Team t1, Team t2)
+		{
+			double difference = t1.averageSkill() - t2.averageSkill();
+
+			if (difference > 0)
+			{
+				return 1;
+			}
+			else if (difference < 0)
+			{
+				return -1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+		
+	}
+	
+	private static class PlayerSkillComparator implements Comparator<Player>
+	{
+		@Override
+		public int compare(Player p1, Player p2) {
+			return p1.skill - p2.skill;
 		}
 		
 	}

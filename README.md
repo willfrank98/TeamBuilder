@@ -1,8 +1,15 @@
 TeamBuilder by Will Frank
 
-sort teams from worst to best, give worst team best stub
+See <something.csv> for an example of the appropriate input format
+
+To compile and run:
+-
+-
+-
+
 
 TODO (high priority to low):
 -group siblings together
+-take availability into account
 -make GUI
 -account for spelling mistakes
