@@ -1,4 +1,3 @@
-import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -137,24 +136,11 @@ public class Team
 		return totalSkill;
 	}
 	
+	
 	@Override
 	public String toString()
 	{
 		return ("largest grade: " + largestGrade() + ", largest school: " + largestSchool() + ", # players: " + size());
-	}
-	
-	
-	
-	
-	public class TeamSkillComparator implements Comparator<Team>
-	{
-
-		@Override
-		public int compare(Team arg0, Team arg1) {
-			// TODO Auto-generated method stub
-			return 0;
-		}
-		
 	}
 
 }

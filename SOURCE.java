@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Scanner;
@@ -112,9 +113,8 @@ public class SOURCE {
 		//makes sure each stub team has 3-5 from the already-represented school
 		for (Team team : teams) //iterates through all teams
 		{
-			//teams.remove(team); //removes the current team while this is done
-			
-			for (Enumeration<String> e = team.schools.keys(); e.hasMoreElements();) //iterates through each school on a team
+			//iterates through each school on a team
+			for (Enumeration<String> e = team.schools.keys(); e.hasMoreElements();) 
 			{
 				String school = e.nextElement();
 				
@@ -133,15 +133,29 @@ public class SOURCE {
 					}
 				}
 			}
-			
-			//teams.add(team);
 		}
 		
 		int numTeams = (totalPlayers/14) + 1; //max of 14 per team
+		int maxPlayers = 14;
 		
-		if (teams.size() > numTeams)
+		TeamSkillComparator comp = new TeamSkillComparator();
+		//sorts the teams by total skill level, then adds the worst team to the best team
+		
+		while (teams.size() > numTeams)
 		{
-			//merge the best teams with the worst teams
+			teams.sort(comp);
+			
+			//if the best and worst team are too big to be added moves on to the 2nd best and 2nd worst, etc.
+			for (int i = 0; i < teams.size(); i++) 
+			{
+				if (teams.get(i).size() + teams.get(teams.size() - 1 - i).size() < 14)
+				{
+					teams.get(i).addPlayers(teams.get(teams.size() - 1 - i));
+					teams.remove(teams.get(teams.size() - 1 - i));
+					break;
+				}
+			}
+			
 			
 			
 		}
@@ -150,6 +164,13 @@ public class SOURCE {
 	}
 
 
+	/**
+	 * Returns a player from players with the appropriate school and grade
+	 * @param school the desired school
+	 * @param grade the desired grade
+	 * @param players the list of players to choose from
+	 * @return the appropriate Player
+	 */
 	static Player findPlayer(String school, int grade, Vector<Player> players)
 	{
 		for (Player player : players)
@@ -161,6 +182,21 @@ public class SOURCE {
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * 
+	 * A Comparator for the Team class, based on team's total skill
+	 *
+	 */
+	private static class TeamSkillComparator implements Comparator<Team>
+	{
+
+		@Override
+		public int compare(Team t1, Team t2) {
+			return t1.totalSKill() - t2.totalSKill();
+		}
+		
 	}
 
 }
