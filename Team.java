@@ -7,9 +7,10 @@ public class Team
 	
 	//private String coach; //not currently relevant
 	public Vector<Player> players;
-	int[] numGrade; //the number of players in each grade
-	int[] skillGrade; //the TOTAL skill of each grade
-	Hashtable<String, Integer> schools;
+	private int[] numGrade; //the number of players in each grade
+	private int[] skillGrade; //the TOTAL skill of each grade
+	public int[][] playersByGradeAndSkill;
+	public Hashtable<String, Integer> schools;
 	
 	public Team()
 	{
@@ -17,6 +18,7 @@ public class Team
 		
 		numGrade = new int[12];
 		skillGrade = new int[12];
+		playersByGradeAndSkill = new int[13][6];
 		schools = new Hashtable<String, Integer>();
 	}
 	
@@ -29,6 +31,7 @@ public class Team
 		players.add(p);
 		numGrade[p.grade]++;
 		skillGrade[p.grade] += p.skill;
+		playersByGradeAndSkill[p.grade][p.skill]++;
 		
 		if (!schools.containsKey(p.school))
 		{
@@ -145,11 +148,18 @@ public class Team
 	 * @return The average skill of all players on the team
 	 */
 	public double averageSkill()
+	{;
+		return (double)this.totalSkill()/(double)this.size();
+	}
+	
+	/**
+	 * Gets the average skill of players within a certain grade
+	 * @param grade the desired grade
+	 * @return total skill of a grade divided by the number of players on the team from that grade
+	 */
+	public double averageSkillByGrade(int grade)
 	{
-		double skill = this.totalSkill();
-		double size = this.size();
-		double avg = skill/size;
-		return avg;
+		return (double)(skillGrade[grade]/(double)numGrade[grade]);
 	}
 	
 	
@@ -157,6 +167,22 @@ public class Team
 	public String toString()
 	{	
 		return ("largest grade: " + this.largestGrade() + ", largest school: " + this.largestSchool() + ", num players: " + this.size() + ", avg skill: " + this.averageSkill());
+	}
+	
+	/**
+	 * A toString that outputs similar to the input
+	 * @return
+	 */
+	public String toStringAlt()
+	{
+		String output = "";
+		
+		for (Player player : players)
+		{
+			output += (player.name + "\t" + player.grade + "\t" + player.skill + "\t" + player.friendRequest + "\t" + player.school + "\n"); 
+		}
+		
+		return output;
 	}
 
 }

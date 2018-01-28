@@ -3,12 +3,13 @@ import java.io.FileNotFoundException;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.Vector;
 
 public class SOURCE {
 	
-	final static int NUM_GRADES = 12; //maybe change the 12
+	final static int NUM_GRADES = 13; //grades 0 to 12
 
 	public static void main(String[] args) {
 		
@@ -32,14 +33,12 @@ public class SOURCE {
 		
 		//Used to calculate average skill of each grade
 		int[] gradePlayerCounts = new int[NUM_GRADES]; 
-		int[] gradeSkillTotals = new int[NUM_GRADES];
-		//Used to calculate how many players of each grad need to be on a team
+		//int[] gradeSkillTotals = new int[NUM_GRADES];
 		int totalPlayers = 0;
-		double avgGrade = 0;
 		
 		//the min and max grades present
-		int minGrade = -1;
-		int maxGrade = 999;
+		int minGrade = 999;
+		int maxGrade = -1;
 		
 		while(sc.hasNextLine())
 		{
@@ -81,24 +80,10 @@ public class SOURCE {
 			players.put(name, temp);
 			
 			gradePlayerCounts[grade]++;
-			gradeSkillTotals[grade] += skill;
+			//gradeSkillTotals[grade] += skill;
 			totalPlayers++;
-			avgGrade += grade;
 		}
 		sc.close();
-		
-		avgGrade = avgGrade/totalPlayers; //the "average grade" of all players
-		
-		//calculates the average skill level of each grade
-		//this is done to balance each team by skill per grade
-		int[] gradeAverageSkill = new int[NUM_GRADES];
-		for (int i = 0; i < NUM_GRADES; i++)
-		{
-			if (gradePlayerCounts[i] > 0)
-			{
-				gradeAverageSkill[i] = gradeSkillTotals[i]/gradePlayerCounts[i];
-			}
-		}
 		
 		Vector<Team> teams = new Vector<Team>();
 		
@@ -170,27 +155,51 @@ public class SOURCE {
 			}
 		}
 		
-		//players are sorted by skill
-		//this may be unneccesary
+		//the total number of players by skill and grade
+		int[][] playersByGradeAndSkill = new int[NUM_GRADES][6];
+		
+		for (Player player : playersVec)
+		{
+			playersByGradeAndSkill[player.grade][player.skill]++;			
+		}
+		
+		
+		//sorts players by skill from lowest to highest
+		//this makes searching for the next player faster
 		playersVec.sort(new PlayerSkillComparator());
 		
-		while (playersVec.size() > 0)
+		//sorts teams largest to smallest
+		//this causes bigger teams to have fewer of the best players
+		teams.sort(new TeamSizeComparator());
+		
+		//Makes sure each team has the same number of players by skill and grade
+		for (Team team : teams)
 		{
-			//for each team
-				//add players by grade until gradePlayerCounts[grade]/maxPlayers is reached
-				//given the current avg skill of team, find a player that moves the avg towards gradeSkillTotals[grade]/gradePlayerCounts[grade]
-			
-			for (Team team : teams)
+			for (int grade = minGrade; grade <= maxGrade; grade++)
 			{
-				for (int i = minGrade; i <= maxGrade; i++)
+				for (int skill = 1; skill <= 5; skill++)
 				{
-					if (team.numGrade[i] < /* the minimum numbers of players from each grade */ 200)
+					double playerTarget = (double)playersByGradeAndSkill[grade][skill] / (double)numTeams;
+					
+					while (team.playersByGradeAndSkill[grade][skill] < playerTarget && team.size() < maxPlayers)
 					{
+						Player p = findPlayer(grade, skill, playersVec);
 						
+						if (p != null)
+						{
+							team.addPlayer(p);
+							playersVec.remove(p);
+						}
+						else
+						{
+							break;
+						}
 					}
 				}
 			}
 		}
+		
+		
 		
 	}
 
@@ -213,6 +222,52 @@ public class SOURCE {
 		}
 		
 		return null;
+	}
+	
+//	/**
+//	 * Returns a player from players with the appropriate grade
+//	 * @param grade the desired grade
+//	 * @param players the list of players to choose from
+//	 * @return the appropriate Player
+//	 */
+//	static Player findPlayer(int grade, Vector<Player> players)
+//	{
+//		for (Player player : players)
+//		{
+//			if (player.grade == grade)
+//			{
+//				return player;
+//			}
+//		}
+//		
+//		return null;
+//	}
+	
+	/**
+	 * Returns a player from players with the appropriate school and grade
+	 * @param grade the desired grade
+	 * @param skill the desired skill
+	 * @param players the list of players to choose from
+	 * @return the appropriate Player
+	 */
+	static Player findPlayer(int grade, int skill, Vector<Player> players)
+	{
+		for (Player player : players)
+		{
+			if (player.grade == grade && player.skill == skill)
+			{
+				return player;
+			}
+		}
+		
+		return null;
+	}
+	
+	static Player getRandomPlayer(Vector<Player> players)
+	{
+		Random rnd = new Random(System.nanoTime());
+		
+		return players.get(rnd.nextInt(players.size()));
 	}
 	
 	/**
@@ -243,10 +298,31 @@ public class SOURCE {
 		
 	}
 	
+	/**
+	 * 
+	 * A Comparator for the Team class, based on team's size
+	 *
+	 */
+	private static class TeamSizeComparator implements Comparator<Team>
+	{
+		@Override
+		public int compare(Team t1, Team t2)
+		{
+			return t2.size() - t1.size();
+		}
+		
+	}
+	
+	/**
+	 * 
+	 * A comparator for the Player class, based on skill
+	 *
+	 */
 	private static class PlayerSkillComparator implements Comparator<Player>
 	{
 		@Override
-		public int compare(Player p1, Player p2) {
+		public int compare(Player p1, Player p2)
+		{
 			return p1.skill - p2.skill;
 		}
 		
