@@ -1,5 +1,8 @@
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -13,8 +16,8 @@ public class SOURCE {
 
 	public static void main(String[] args) {
 		
-		//TODO: get filepath from stdin
-		String filepath = "F:\\Unsorted Downloads\\23G Registrants.csv";
+		String filepath = "F:\\Programming\\Java\\TeamBuilder\\src\\SampleInput.csv";
+		//filepath = args[0];
 		
 		Scanner sc;
 		
@@ -25,8 +28,7 @@ public class SOURCE {
 			return;
 		}
 		
-		//Skips the two header lines
-		sc.nextLine();
+		//Skips the header line
 		sc.nextLine();
 		
 		Hashtable<String, Player> players = new Hashtable<String, Player>(); //A list of all players
@@ -136,6 +138,19 @@ public class SOURCE {
 				}
 			}
 		}
+		
+//		int numTeams;
+//		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+//		System.out.print("How many teams would you like?: ");
+//		try
+//		{
+//			numTeams = Integer.parseInt(br.readLine());
+//		}
+//		catch(NumberFormatException | IOException nfe)
+//		{
+//			System.err.println("Invalid Format!");
+//		}
+		
 		
 		int maxPlayers = 14; //max of 14 players per team
 		int numTeams = (totalPlayers/maxPlayers) + 1; 
