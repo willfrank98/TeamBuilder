@@ -10,7 +10,7 @@ To compile and run:
 
 TODO (high priority to low):
 -handle more edge cases
--group siblings together
+-group siblings/coaches and children together
 -take availability into account
 -make GUI
 -account for spelling mistakes

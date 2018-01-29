@@ -40,6 +40,8 @@ public class SOURCE {
 		int minGrade = 999;
 		int maxGrade = -1;
 		
+		int[][] playersByGradeAndSkillIdeal = new int[NUM_GRADES][6];
+		
 		while(sc.hasNextLine())
 		{
 			//Grabs the next player and splits their information
@@ -82,6 +84,7 @@ public class SOURCE {
 			gradePlayerCounts[grade]++;
 			//gradeSkillTotals[grade] += skill;
 			totalPlayers++;
+			playersByGradeAndSkillIdeal[grade][skill]++;
 		}
 		sc.close();
 		
@@ -134,25 +137,68 @@ public class SOURCE {
 			}
 		}
 		
-		int maxPlayers = 14; //max of 14 per team
+		int maxPlayers = 14; //max of 14 players per team
 		int numTeams = (totalPlayers/maxPlayers) + 1; 
 		
-		TeamAverageSkillComparator comp = new TeamAverageSkillComparator();
-		//sorts the teams by total skill level, then adds the worst team to the best team
+		//attempts to combine the teams so that playersByGradeAndSkill's target is maintained
+		//potentially tries every team combination
+		for (int i = 0; i < teams.size() - 2; i++)
+		{
+			if (teams.size() <= numTeams)
+			{
+				break;
+			}
+			
+			Team t1 = teams.get(i);
+			
+			for (int j = i + 1; j < teams.size() - 1; j++)
+			{
+				Team t2 = teams.get(j);
+				
+				if (t1.size() + t2.size() > maxPlayers)
+				{
+					break;
+				}
+				
+				boolean canAdd = true;
+				
+				for (int grade = minGrade; grade <= maxGrade; grade++)
+				{
+					for (int skill = 1; skill <= 5; skill++)
+					{
+						double playerTarget = (double)playersByGradeAndSkillIdeal[grade][skill] / (double)numTeams;
+						
+						if (t1.playersByGradeAndSkill[grade][skill] + t2.playersByGradeAndSkill[grade][skill] > playerTarget)
+						{
+							canAdd = false;
+							break;
+						}
+					}
+					if (!canAdd)
+					{
+						break;
+					}
+				}
+				
+				if (canAdd)
+				{
+					t1.addPlayers(t2);
+					teams.remove(t2);
+					break;
+				}
+			}
+			
+		}
+		
+		TeamSizeComparator comp = new TeamSizeComparator();
+		//sorts the teams by size, then adds the smallest teams together
 		while (teams.size() > numTeams)
 		{
 			teams.sort(comp);
 			
-			//if the best and worst team are too big to be added moves on to the 2nd best and 2nd worst, etc.
-			for (int i = 0; i < teams.size(); i++) 
-			{
-				if (teams.get(i).size() + teams.get(teams.size() - 1 - i).size() < maxPlayers)
-				{
-					teams.get(i).addPlayers(teams.get(teams.size() - 1 - i));
-					teams.remove(teams.get(teams.size() - 1 - i));
-					break;
-				}
-			}
+			teams.get(0).addPlayers(teams.get(1));
+			teams.remove(teams.get(1));
+			
 		}
 		
 		//the total number of players by skill and grade
@@ -179,9 +225,14 @@ public class SOURCE {
 			{
 				for (int skill = 1; skill <= 5; skill++)
 				{
-					double playerTarget = (double)playersByGradeAndSkill[grade][skill] / (double)numTeams;
+					if (playersByGradeAndSkillIdeal[grade][skill] < numTeams)
+					{
+						break;
+					}
 					
-					while (team.playersByGradeAndSkill[grade][skill] < playerTarget && team.size() < maxPlayers)
+					int playerTarget = playersByGradeAndSkillIdeal[grade][skill] / numTeams;
+					
+					while (team.playersByGradeAndSkill[grade][skill] < playerTarget /*&& team.size() < maxPlayers - 1*/)
 					{
 						Player p = findPlayer(grade, skill, playersVec);
 						
@@ -198,8 +249,16 @@ public class SOURCE {
 				}
 			}
 		}
+				
 		
-		
+		//Prints out the finalized teams
+		int i = 1;
+		for (Team team : teams)
+		{
+			System.out.println("Team " + i + ": ");
+			System.out.println(team.toStringAlt());
+			i++;
+		}
 		
 	}
 
@@ -223,25 +282,6 @@ public class SOURCE {
 		
 		return null;
 	}
-	
-//	/**
-//	 * Returns a player from players with the appropriate grade
-//	 * @param grade the desired grade
-//	 * @param players the list of players to choose from
-//	 * @return the appropriate Player
-//	 */
-//	static Player findPlayer(int grade, Vector<Player> players)
-//	{
-//		for (Player player : players)
-//		{
-//			if (player.grade == grade)
-//			{
-//				return player;
-//			}
-//		}
-//		
-//		return null;
-//	}
 	
 	/**
 	 * Returns a player from players with the appropriate school and grade
@@ -308,7 +348,7 @@ public class SOURCE {
 		@Override
 		public int compare(Team t1, Team t2)
 		{
-			return t2.size() - t1.size();
+			return t1.size() - t2.size();
 		}
 		
 	}

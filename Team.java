@@ -179,7 +179,7 @@ public class Team
 		
 		for (Player player : players)
 		{
-			output += (player.name + "\t" + player.grade + "\t" + player.skill + "\t" + player.friendRequest + "\t" + player.school + "\n"); 
+			output += (player.name + "\t\t" + player.grade + "\t" + player.skill + "\t" + player.friendRequest + "\t" + player.school + "\n"); 
 		}
 		
 		return output;
