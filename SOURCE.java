@@ -1,12 +1,13 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Random;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -16,15 +17,33 @@ public class SOURCE {
 
 	public static void main(String[] args) {
 		
-		String filepath = "F:\\Programming\\Java\\TeamBuilder\\src\\SampleInput.csv";
-		//filepath = args[0];
+		//String filepath = "F:\\Programming\\Java\\TeamBuilder\\src\\SampleInput.csv";
+		
+		String filepath = "";
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		System.out.print("Location of input file: ");
+		try	{
+			filepath = br.readLine();
+		} catch(IOException nfe) {
+			System.err.println("Invalid Format!");
+			return;
+		}
+		
+		System.out.println("Location of output file: ");
+		String output = "";
+		try	{
+			output = br.readLine();
+		} catch(IOException nfe) {
+			System.err.println("Invalid Format!");
+			return;
+		}
 		
 		Scanner sc;
 		
 		try {
 			sc = new Scanner(new File(filepath));
 		} catch (FileNotFoundException e) {
-			System.out.println("File not found: " + filepath);
+			System.out.println("Input file not found: " + filepath);
 			return;
 		}
 		
@@ -139,21 +158,18 @@ public class SOURCE {
 			}
 		}
 		
-//		int numTeams;
-//		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-//		System.out.print("How many teams would you like?: ");
-//		try
-//		{
-//			numTeams = Integer.parseInt(br.readLine());
-//		}
-//		catch(NumberFormatException | IOException nfe)
-//		{
-//			System.err.println("Invalid Format!");
-//		}
-		
-		
 		int maxPlayers = 14; //max of 14 players per team
 		int numTeams = (totalPlayers/maxPlayers) + 1; 
+
+		System.out.print("How many teams would you like?: ");
+		try
+		{
+			numTeams = Integer.parseInt(br.readLine());
+		}
+		catch(NumberFormatException | IOException nfe)
+		{
+			System.err.println("Invalid Format! Defaulting to 14 players per team");
+		}
 		
 		//attempts to combine the teams so that playersByGradeAndSkill's target is maintained
 		//potentially tries every team combination
@@ -205,6 +221,47 @@ public class SOURCE {
 			
 		}
 		
+		//now attempts to combine teams merely to maintain grade targets
+		for (int i = 0; i < teams.size() - 2; i++)
+		{
+			if (teams.size() <= numTeams)
+			{
+				break;
+			}
+			
+			Team t1 = teams.get(i);
+			
+			for (int j = i + 1; j < teams.size() - 1; j++)
+			{
+				Team t2 = teams.get(j);
+				
+				if (t1.size() + t2.size() > maxPlayers)
+				{
+					break;
+				}
+				
+				boolean canAdd = true;
+				
+				for (int grade = minGrade; grade <= maxGrade; grade++)
+				{
+					double playerTarget = (double)gradePlayerCounts[grade]/(double)numTeams;
+					if (t1.numGrade(grade) + t2.numGrade(grade) > playerTarget)
+					{
+						canAdd = false;
+						break;
+					}
+				}
+				
+				if (canAdd)
+				{
+					t1.addPlayers(t2);
+					teams.remove(t2);
+					break;
+				}
+			}
+			
+		}
+		
 		TeamSizeComparator comp = new TeamSizeComparator();
 		//sorts the teams by size, then adds the smallest teams together
 		while (teams.size() > numTeams)
@@ -233,7 +290,7 @@ public class SOURCE {
 		//this causes bigger teams to have fewer of the best players
 		teams.sort(new TeamSizeComparator());
 		
-		//Makes sure each team has the same number of players by skill and grade
+		//Makes sure each team has the same number of players by skill and grade, if possible
 		for (Team team : teams)
 		{
 			for (int grade = minGrade; grade <= maxGrade; grade++)
@@ -247,7 +304,7 @@ public class SOURCE {
 					
 					int playerTarget = playersByGradeAndSkillIdeal[grade][skill] / numTeams;
 					
-					while (team.playersByGradeAndSkill[grade][skill] < playerTarget /*&& team.size() < maxPlayers - 1*/)
+					while (team.playersByGradeAndSkill[grade][skill] < playerTarget)
 					{
 						Player p = findPlayer(grade, skill, playersVec);
 						
@@ -264,17 +321,93 @@ public class SOURCE {
 				}
 			}
 		}
+		
+		playersVec.sort(new PlayerReverseSkillComparator());
+		
+		//adds most of the remaining players to the teams
+		int grade = minGrade;
+		int iter = 0;
+		while (playersVec.size() > numTeams)
+		{
+			//alternates between ascending and descending
+			if (iter%2 == 0)
+			{
+				teams.sort(new TeamReverseSizeComparator());
+			}
+			else
+			{
+				teams.sort(new TeamSizeComparator());
+			}
+			
+			//adds one player to each team
+			for (Team team : teams)
+			{
+				double gradeTarget = (double)gradePlayerCounts[grade]/(double)numTeams;
+				if (team.numGrade(grade) < gradeTarget && team.size() < maxPlayers - 1) //notice this is maxPlayers - 1
+				{
+					Player p = findPlayer(grade, playersVec);
+
+					if (p != null)
+					{
+						team.addPlayer(p);
+						playersVec.remove(p);
+					}
+					else if (grade < maxGrade)
+					{
+						grade++;
+					}
+					else
+					{
+						break;
+					}
+					
+				}
+				
+			}
+			iter++;
+		}
+		
+		//add remaining players to the smallest/best teams
+		int i = 0;
+		while (playersVec.size() > 0)
+		{
+			teams.sort(new TeamAverageSkillComparator());
+			teams.sort(new TeamSizeComparator());
+			teams.get(i).addPlayer(playersVec.get(0));
+			playersVec.remove(0);
+		}
 				
 		
 		//Prints out the finalized teams
-		int i = 1;
+//		i = 1;
+//		for (Team team : teams)
+//		{
+//			System.out.println("Team " + i + ": ");
+//			System.out.println(team.toStringAlt());
+//			i++;
+//		}
+		
+		PrintWriter out = null;
+		try {
+			out = new PrintWriter(new FileWriter(output));
+		} 
+		catch (IOException e)
+		{
+			System.out.println("Invalid output file: " + output);
+			return;
+		} 
+		
+		i = 1;
 		for (Team team : teams)
 		{
-			System.out.println("Team " + i + ": ");
-			System.out.println(team.toStringAlt());
+			out.println("Team " + i);
+			out.println(team.toStringAlt());
 			i++;
 		}
 		
+		out.close();
+		
+		System.out.println("Complete");
 	}
 
 
@@ -318,16 +451,36 @@ public class SOURCE {
 		return null;
 	}
 	
-	static Player getRandomPlayer(Vector<Player> players)
+	/**
+	 * Returns a player from players with the appropriate school and grade
+	 * @param grade the desired grade
+	 * @param skill the desired skill
+	 * @param players the list of players to choose from
+	 * @return the appropriate Player
+	 */
+	static Player findPlayer(int grade, Vector<Player> players)
 	{
-		Random rnd = new Random(System.nanoTime());
+		for (Player player : players)
+		{
+			if (player.grade == grade)
+			{
+				return player;
+			}
+		}
 		
-		return players.get(rnd.nextInt(players.size()));
+		return null;
 	}
+	
+//	static Player getRandomPlayer(Vector<Player> players)
+//	{
+//		Random rnd = new Random(System.nanoTime());
+//		
+//		return players.get(rnd.nextInt(players.size()));
+//	}
 	
 	/**
 	 * 
-	 * A Comparator for the Team class, based on team's total skill
+	 * A Comparator for the Team class, based on team's total skill. Sorts from highest to lowest
 	 *
 	 */
 	private static class TeamAverageSkillComparator implements Comparator<Team>
@@ -335,7 +488,7 @@ public class SOURCE {
 		@Override
 		public int compare(Team t1, Team t2)
 		{
-			double difference = t1.averageSkill() - t2.averageSkill();
+			double difference = t2.averageSkill() - t1.averageSkill();
 
 			if (difference > 0)
 			{
@@ -370,6 +523,21 @@ public class SOURCE {
 	
 	/**
 	 * 
+	 * A Comparator for the Team class, based on team's size. Sorts from largest to smallest
+	 *
+	 */
+	private static class TeamReverseSizeComparator implements Comparator<Team>
+	{
+		@Override
+		public int compare(Team t1, Team t2)
+		{
+			return t2.size() - t1.size();
+		}
+		
+	}
+	
+	/**
+	 * 
 	 * A comparator for the Player class, based on skill
 	 *
 	 */
@@ -379,6 +547,21 @@ public class SOURCE {
 		public int compare(Player p1, Player p2)
 		{
 			return p1.skill - p2.skill;
+		}
+		
+	}
+	
+	/**
+	 * 
+	 * A comparator for the Player class, based on skill. Sorts from highest to lowest
+	 *
+	 */
+	private static class PlayerReverseSkillComparator implements Comparator<Player>
+	{
+		@Override
+		public int compare(Player p1, Player p2)
+		{
+			return p2.skill - p1.skill;
 		}
 		
 	}

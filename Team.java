@@ -162,6 +162,16 @@ public class Team
 		return (double)(skillGrade[grade]/(double)numGrade[grade]);
 	}
 	
+	/**
+	 * Returns the number of students in the specified grade on this team
+	 * @param grade the specified grade
+	 * @return the number of students in the specified grade on this team
+	 */
+	public int numGrade(int grade)
+	{
+		return this.numGrade[grade];
+	}
+	
 	
 	@Override
 	public String toString()
@@ -179,7 +189,7 @@ public class Team
 		
 		for (Player player : players)
 		{
-			output += (player.name + "\t\t" + player.grade + "\t" + player.skill + "\t" + player.friendRequest + "\t" + player.school + "\n"); 
+			output += (player.toString() + "\n"); 
 		}
 		
 		return output;

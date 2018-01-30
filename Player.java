@@ -25,7 +25,7 @@ public class Player {
 	@Override
 	public String toString()
 	{
-		return (this.name + ", " + this.grade + ", " + this.skill + ", " + this.friendRequest + ", " + this.school);
+		return (this.name + "," + this.grade + "," + this.skill + "," + this.friendRequest + "," + this.school);
 	}
 
 }

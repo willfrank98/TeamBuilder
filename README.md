@@ -1,12 +1,6 @@
 TeamBuilder by Will Frank
 
-See <something.csv> for an example of the appropriate input format
-
-To compile and run:
--
--
--
-
+See SampleInput.csv for an example of the appropriate input format
 
 TODO (high priority to low):
 -handle more edge cases
